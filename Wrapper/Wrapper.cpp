@@ -16,3 +16,19 @@ extern "C" __declspec(dllexport) ovrHmd __stdcall HmdCreate(int index)
 {
 	return ovrHmd_Create(index);
 }
+
+extern "C" __declspec(dllexport) char __stdcall StartSensor(ovrHmd hmd, unsigned int supportedCaps, unsigned int requiredCaps)
+{
+	return ovrHmd_StartSensor(hmd, supportedCaps, requiredCaps);
+
+}
+
+extern "C" __declspec(dllexport) void __stdcall StopSensor(ovrHmd hmd)
+{
+	return ovrHmd_StopSensor(hmd);
+}
+
+extern "C" __declspec(dllexport) ovrSensorState __stdcall GetSensorState(ovrHmd hmd, double absTime)
+{
+	return ovrHmd_GetSensorState(hmd, absTime);
+}
