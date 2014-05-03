@@ -155,10 +155,13 @@ public class OVRManager
     public static extern void Shutdown();
 
     [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
-    public static extern IntPtr HmdCreate(int index);
+    public static extern IntPtr Create(int index);
 
     [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
-    public static extern void HmdGetDesc(IntPtr hmd, ref ovrHmdDesc desc);
+    public static extern void GetDesc(IntPtr hmd, ref ovrHmdDesc desc);
+
+    [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
+    public static extern ovrSizei GetFovTextureSize(IntPtr hmd, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel);
 
     [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
     public static extern IntPtr StartSensor(IntPtr hmd, UInt32 supportedCaps, UInt32 requiredCaps);
@@ -178,9 +181,13 @@ namespace Sample
         static void Main(string[] args)
         {
             OVRManager.Initialize();
-            IntPtr hmd = OVRManager.HmdCreate(0);
+            IntPtr hmd = OVRManager.Create(0);
             OVRManager.ovrHmdDesc desc = new OVRManager.ovrHmdDesc();
-            OVRManager.HmdGetDesc(hmd, ref desc);
+            OVRManager.GetDesc(hmd, ref desc);
+
+            OVRManager.ovrSizei texture_size_left = OVRManager.GetFovTextureSize(hmd, OVRManager.ovrEyeType.ovrEye_Left, desc.DefaultEyeFov()[(int)OVRManager.ovrEyeType.ovrEye_Left], 1.0f);
+            OVRManager.ovrSizei texture_size_right = OVRManager.GetFovTextureSize(hmd, OVRManager.ovrEyeType.ovrEye_Right, desc.DefaultEyeFov()[(int)OVRManager.ovrEyeType.ovrEye_Right], 1.0f);
+            
             OVRManager.StartSensor(hmd, 0x0010 | 0x0020 | 0x0100, 0);
             OVRManager.ovrSensorState sensor_state = OVRManager.GetSensorState(hmd, 0.0);
             OVRManager.StopSensor(hmd);

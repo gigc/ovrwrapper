@@ -12,7 +12,7 @@ EXPORT_TYPE void __stdcall Shutdown()
 	return ovr_Shutdown();
 }
 
-EXPORT_TYPE ovrHmd __stdcall HmdCreate(int index)
+EXPORT_TYPE ovrHmd __stdcall Create(int index)
 {
 	return ovrHmd_Create(index);
 }
@@ -33,7 +33,12 @@ EXPORT_TYPE ovrSensorState __stdcall GetSensorState(ovrHmd hmd, double absTime)
 	return ovrHmd_GetSensorState(hmd, absTime);
 }
 
-EXPORT_TYPE void __stdcall HmdGetDesc(ovrHmd hmd, ovrHmdDesc* desc)
+EXPORT_TYPE void __stdcall GetDesc(ovrHmd hmd, ovrHmdDesc* desc)
 {
 	ovrHmd_GetDesc(hmd, desc);
+}
+
+EXPORT_TYPE ovrSizei __stdcall GetFovTextureSize(ovrHmd hmd, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel)
+{
+	return ovrHmd_GetFovTextureSize(hmd, eye, fov, pixelsPerDisplayPixel);
 }
