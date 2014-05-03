@@ -148,6 +148,23 @@ public class OVRManager
         }
     };
 
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct ovrRecti
+    {
+        public ovrVector2i Pos;
+        public ovrSizei Size;
+    };
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct ovrEyeDesc
+    {
+        public ovrEyeType Eye;
+        public ovrSizei TextureSize;     // Absolute size of render texture.
+        public ovrRecti RenderViewport;  // Viewport within texture where eye rendering takes place.
+                                     // If specified as (0,0,0,0), it will be initialized to TextureSize.
+        public ovrFovPort Fov;
+    };
+
     [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
     public static extern char Initialize();
 
