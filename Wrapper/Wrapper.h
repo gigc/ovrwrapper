@@ -1,8 +1,10 @@
 #pragma once
+#define EXPORT_TYPE extern "C" __declspec(dllexport)
 
-extern "C" __declspec(dllexport) char __stdcall Initialize();
-extern "C" __declspec(dllexport) void __stdcall Shutdown();
-extern "C" __declspec(dllexport) ovrHmd __stdcall HmdCreate(int index);
-extern "C" __declspec(dllexport) char __stdcall StartSensor(ovrHmd hmd, unsigned int supportedCaps, unsigned int requiredCaps);
-extern "C" __declspec(dllexport) void __stdcall StopSensor(ovrHmd hmd);
-extern "C" __declspec(dllexport) ovrSensorState __stdcall GetSensorState(ovrHmd hmd, double absTime);
+EXPORT_TYPE char __stdcall Initialize();
+EXPORT_TYPE void __stdcall Shutdown();
+EXPORT_TYPE ovrHmd __stdcall HmdCreate(int index);
+EXPORT_TYPE void __stdcall HmdGetDesc(ovrHmd hmd, ovrHmdDesc* desc);
+EXPORT_TYPE char __stdcall StartSensor(ovrHmd hmd, unsigned int supportedCaps, unsigned int requiredCaps);
+EXPORT_TYPE void __stdcall StopSensor(ovrHmd hmd);
+EXPORT_TYPE ovrSensorState __stdcall GetSensorState(ovrHmd hmd, double absTime);
