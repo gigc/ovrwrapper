@@ -3,38 +3,48 @@
 #include "Wrapper.h"
 #pragma pack(1)
 
-extern "C" __declspec(dllexport) char __stdcall Initialize()
+EXPORT_TYPE char __stdcall Initialize()
 {
 	return ovr_Initialize();
 }
 
-extern "C" __declspec(dllexport) void __stdcall Shutdown()
+EXPORT_TYPE void __stdcall Shutdown()
 {
 	return ovr_Shutdown();
 }
 
-extern "C" __declspec(dllexport) ovrHmd __stdcall HmdCreate(int index)
+EXPORT_TYPE ovrHmd __stdcall Create(int index)
 {
 	return ovrHmd_Create(index);
 }
 
-extern "C" __declspec(dllexport) ovrHmd __stdcall HmdCreateDebug(ovrHmdType type)
+EXPORT_TYPE ovrHmd __stdcall CreateDebug(ovrHmdType type)
 {
 	return ovrHmd_CreateDebug(type);
 }
 
-extern "C" __declspec(dllexport) char __stdcall StartSensor(ovrHmd hmd, unsigned int supportedCaps, unsigned int requiredCaps)
+EXPORT_TYPE char __stdcall StartSensor(ovrHmd hmd, unsigned int supportedCaps, unsigned int requiredCaps)
 {
 	return ovrHmd_StartSensor(hmd, supportedCaps, requiredCaps);
 
 }
 
-extern "C" __declspec(dllexport) void __stdcall StopSensor(ovrHmd hmd)
+EXPORT_TYPE void __stdcall StopSensor(ovrHmd hmd)
 {
 	return ovrHmd_StopSensor(hmd);
 }
 
-extern "C" __declspec(dllexport) ovrSensorState __stdcall GetSensorState(ovrHmd hmd, double absTime)
+EXPORT_TYPE ovrSensorState __stdcall GetSensorState(ovrHmd hmd, double absTime)
 {
 	return ovrHmd_GetSensorState(hmd, absTime);
+}
+
+EXPORT_TYPE void __stdcall GetDesc(ovrHmd hmd, ovrHmdDesc* desc)
+{
+	ovrHmd_GetDesc(hmd, desc);
+}
+
+EXPORT_TYPE ovrSizei __stdcall GetFovTextureSize(ovrHmd hmd, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel)
+{
+	return ovrHmd_GetFovTextureSize(hmd, eye, fov, pixelsPerDisplayPixel);
 }
