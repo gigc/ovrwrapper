@@ -42,3 +42,8 @@ EXPORT_TYPE ovrSizei __stdcall GetFovTextureSize(ovrHmd hmd, ovrEyeType eye, ovr
 {
 	return ovrHmd_GetFovTextureSize(hmd, eye, fov, pixelsPerDisplayPixel);
 }
+
+EXPORT_TYPE ovrBool __stdcall ConfigureRendering(ovrHmd hmd, const ovrRenderAPIConfig* apiConfig, unsigned int hmdCaps, unsigned int distortionCaps, const ovrEyeDesc eyeDescIn[2], ovrEyeRenderDesc* eyeRenderDescOut[2])
+{
+	return ovrHmd_ConfigureRendering(hmd, apiConfig, hmdCaps, distortionCaps, eyeDescIn, *eyeRenderDescOut);
+}

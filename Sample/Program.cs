@@ -5,7 +5,7 @@ namespace Sample
 {
     public class OVRManager
     {
-        public enum ovrHmdType
+        public enum ovrHmdType : uint
         {
             ovrHmd_None = 0,
             ovrHmd_DK1 = 3,
@@ -15,14 +15,14 @@ namespace Sample
             ovrHmd_Other
         };
 
-        public enum ovrEyeType
+        public enum ovrEyeType : uint
         {
             ovrEye_Left = 0,
             ovrEye_Right = 1,
             ovrEye_Count = 2
         };
 
-        public enum ovrHmdCapBits
+        public enum ovrHmdCapBits : uint
         {
             ovrHmdCap_Present = 0x0001,   //  This HMD exists (as opposed to being unplugged).
             ovrHmdCap_Available = 0x0002,   //  HMD and is sensor is available for use
@@ -36,6 +36,24 @@ namespace Sample
 
             // Support rendering without VSync for debugging
             ovrHmdCap_NoVSync = 0x1000
+        };
+
+        public enum ovrDistortionCaps : uint
+        {        
+            ovrDistortion_Chromatic = 0x01,
+            ovrDistortion_TimeWarp = 0x02,
+            ovrDistortion_Vignette = 0x08
+        };
+
+        public enum ovrRenderAPIType : uint
+        {
+            ovrRenderAPI_None,
+            ovrRenderAPI_OpenGL,
+            ovrRenderAPI_Android_GLES,  // May include extra native window pointers, etc.
+            ovrRenderAPI_D3D9,
+            ovrRenderAPI_D3D10,
+            ovrRenderAPI_D3D11,
+            ovrRenderAPI_Count
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
@@ -96,6 +114,18 @@ namespace Sample
             public UInt32 x, y;
 
             public ovrVector2i(UInt32 x, UInt32 y)
+            {
+                this.x = x;
+                this.y = y;
+            }
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+        public struct ovrVector2f
+        {
+            public float x, y;
+
+            public ovrVector2f(float x, float y)
             {
                 this.x = x;
                 this.y = y;
@@ -184,6 +214,49 @@ namespace Sample
             public ovrFovPort Fov;
         };
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+        public struct ovrEyeRenderDesc
+        {
+            public ovrEyeDesc Desc;
+            public ovrRecti DistortedViewport; 	        // Distortion viewport 
+            public ovrVector2f PixelsPerTanAngleAtCenter;  // How many display pixels will fit in tan(angle) = 1.
+            public ovrVector3f ViewAdjust;  		        // Translation to be applied to view matrix.
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+        public struct ovrRenderAPIConfigHeader
+        {
+            public ovrRenderAPIType API;
+            public ovrSizei RTSize;
+            public int Multisample;
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+        public struct ovrRenderAPIConfig
+        {
+            public ovrRenderAPIConfigHeader Header;
+            UInt32 _PlatformData;
+            UInt32 _PlatformData2;
+            UInt32 _PlatformData3;
+            UInt32 _PlatformData4;
+            UInt32 _PlatformData5;
+            UInt32 _PlatformData6;
+            UInt32 _PlatformData7;
+            UInt32 _PlatformData8;
+        };
+
+        [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Ansi)]
+        public struct ovrD3D9ConfigData
+        {
+            [FieldOffset(0)]
+            ovrRenderAPIConfig Generic;
+
+            [FieldOffset(0)]
+            public ovrRenderAPIConfigHeader Header;
+            [FieldOffset(16)]
+            public IntPtr Device;
+        };
+
         [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
         public static extern char Initialize();
 
@@ -200,7 +273,10 @@ namespace Sample
         public static extern ovrSizei GetFovTextureSize(IntPtr hmd, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel);
 
         [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
-        public static extern IntPtr StartSensor(IntPtr hmd, UInt32 supportedCaps, UInt32 requiredCaps);
+        public static extern bool ConfigureRendering(IntPtr hmd, ref ovrD3D9ConfigData apiConfig, ovrHmdCapBits hmdCaps, ovrDistortionCaps distortionCaps, ovrEyeDesc[] eyeDescIn, ref ovrEyeRenderDesc[] eyeRenderDescOut);
+
+        [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
+        public static extern IntPtr StartSensor(IntPtr hmd, ovrHmdCapBits supportedCaps, ovrHmdCapBits requiredCaps);
 
         [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
         public static extern IntPtr StopSensor(IntPtr hmd);
@@ -237,9 +313,24 @@ namespace Sample
             eyes[1].RenderViewport.Pos = new ovrVector2i((rt_size.w + 1) / 2, 0);
             eyes[1].RenderViewport.Size = eyes[0].RenderViewport.Size;
 
-            StartSensor(hmd, 0x0010 | 0x0020 | 0x0100, 0);
-            ovrSensorState sensor_state = GetSensorState(hmd, 0.0);
-            StopSensor(hmd);
+            ovrEyeRenderDesc[] renderDesc = new ovrEyeRenderDesc[2];
+
+            ovrD3D9ConfigData renderConfigData = new ovrD3D9ConfigData();
+            //real pointer (IDirect3DDevice9*) to device
+            renderConfigData.Device = (IntPtr)0;
+
+            renderConfigData.Header = new ovrRenderAPIConfigHeader
+            {
+                API = ovrRenderAPIType.ovrRenderAPI_D3D9,
+                Multisample = 1,
+                RTSize = new ovrSizei(desc.Resolution.w, desc.Resolution.h)
+            };
+            if (ConfigureRendering(hmd, ref renderConfigData, 0, ovrDistortionCaps.ovrDistortion_Chromatic | ovrDistortionCaps.ovrDistortion_TimeWarp, eyes, ref renderDesc))
+            {
+                StartSensor(hmd, ovrHmdCapBits.ovrHmdCap_Orientation | ovrHmdCapBits.ovrHmdCap_YawCorrection | ovrHmdCapBits.ovrHmdCap_LatencyTest, 0);
+                ovrSensorState sensor_state = GetSensorState(hmd, 0.0);
+                StopSensor(hmd);
+            }
             Shutdown();
         }
     }
