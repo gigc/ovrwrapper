@@ -57,3 +57,18 @@ EXPORT_TYPE void __stdcall EndFrame(ovrHmd hmd)
 {
 	return ovrHmd_EndFrame(hmd);
 }
+
+EXPORT_TYPE ovrPosef __stdcall BeginEyeRender(ovrHmd hmd, ovrEyeType eye)
+{
+	return ovrHmd_BeginEyeRender(hmd, eye);
+}
+
+EXPORT_TYPE void __stdcall EndEyeRender(ovrHmd hmd, ovrEyeType eye, ovrPosef renderPose, ovrTexture* eyeTexture)
+{
+	return ovrHmd_EndEyeRender(hmd, eye, renderPose, eyeTexture);
+}
+
+EXPORT_TYPE ovrMatrix4f __stdcall Projection(ovrFovPort fov, float znear, float zfar, ovrBool rightHanded)
+{
+	return ovrMatrix4f_Projection(fov, znear, zfar, rightHanded);
+}

@@ -294,6 +294,61 @@ namespace Sample
             }
         };
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+        public struct ovrTextureHeader
+        {
+            public ovrRenderAPIType API;
+            public ovrSizei TextureSize;
+            public ovrRecti RenderViewport;  // Pixel viewport in texture that holds eye image.
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+        public struct ovrTexture
+        {
+            public ovrTextureHeader Header;
+            UInt32 _PlatformData;
+            UInt32 _PlatformData2;
+            UInt32 _PlatformData3;
+            UInt32 _PlatformData4;
+            UInt32 _PlatformData5;
+            UInt32 _PlatformData6;
+            UInt32 _PlatformData7;
+            UInt32 _PlatformData8;
+        };
+
+        [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Ansi)]
+        public struct ovrD3D9Texture
+        {
+            [FieldOffset(0)]
+            ovrTexture Texture;
+
+            [FieldOffset(0)]
+            public ovrTextureHeader Header;
+            [FieldOffset(28)]
+            public IntPtr pTexture;
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+        public struct ovrMatrix4f
+        {
+            public float M11;
+            public float M21;
+            public float M31;
+            public float M41;
+            public float M12;
+            public float M22;
+            public float M32;
+            public float M42;
+            public float M13;
+            public float M23;
+            public float M33;
+            public float M43;
+            public float M14;
+            public float M24;
+            public float M34;
+            public float M44;
+        };
+
         [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
         public static extern char Initialize();
 
@@ -326,6 +381,12 @@ namespace Sample
 
         [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
         public static extern void EndFrame(IntPtr hmd);
+
+        [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
+        public static extern ovrPosef BeginEyeRender(IntPtr hmd, ovrEyeType eye);
+
+        [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
+        public static extern void EndEyeRender(IntPtr hmd, ovrEyeType eye, ovrPosef renderPose, ref ovrD3D9Texture eyeTexture);
     }
 
     class Program : OVRManager
@@ -357,23 +418,33 @@ namespace Sample
             eyes[1].RenderViewport.Size = eyes[0].RenderViewport.Size;
 
             ovrEyeRenderDesc[] renderDesc = new ovrEyeRenderDesc[2];
-
+            
             ovrD3D9ConfigData renderConfigData = new ovrD3D9ConfigData();
             //real pointer (IDirect3DDevice9*) to device
             renderConfigData.Device = (IntPtr)0;
-
             renderConfigData.Header = new ovrRenderAPIConfigHeader
             {
                 API = ovrRenderAPIType.ovrRenderAPI_D3D9,
                 Multisample = 1,
                 RTSize = new ovrSizei(desc.Resolution.w, desc.Resolution.h)
             };
+
+            ovrD3D9Texture[] textures = new ovrD3D9Texture[2];
+
             if (ConfigureRendering(hmd, ref renderConfigData, 0, ovrDistortionCaps.ovrDistortion_Chromatic | ovrDistortionCaps.ovrDistortion_TimeWarp, eyes, renderDesc))
             {
                 StartSensor(hmd, ovrHmdCapBits.ovrHmdCap_Orientation | ovrHmdCapBits.ovrHmdCap_YawCorrection | ovrHmdCapBits.ovrHmdCap_LatencyTest, 0);
                 //while true
                 BeginFrame(hmd, 0);
-                ovrSensorState sensor_state = GetSensorState(hmd, 0.0);
+                for (int eyeIndex = 0; eyeIndex < (int) ovrEyeType.ovrEye_Count; eyeIndex++)
+                {
+                    ovrEyeType eye = desc.EyeRenderOrder()[eyeIndex];
+                    ovrPosef eyeRenderPose = BeginEyeRender(hmd, eye);
+
+                    ovrSensorState sensor_state = GetSensorState(hmd, 0.0);
+
+                    EndEyeRender(hmd, eye, eyeRenderPose, ref textures[eyeIndex]);
+                }
                 EndFrame(hmd);
                 //end while
                 StopSensor(hmd);

@@ -15,3 +15,8 @@ EXPORT_TYPE ovrSensorState __stdcall GetSensorState(ovrHmd hmd, double absTime);
 
 EXPORT_TYPE ovrFrameTiming __stdcall BeginFrame(ovrHmd hmd, unsigned int frameIndex);
 EXPORT_TYPE void __stdcall EndFrame(ovrHmd hmd);
+
+EXPORT_TYPE ovrPosef __stdcall BeginEyeRender(ovrHmd hmd, ovrEyeType eye);
+EXPORT_TYPE void __stdcall EndEyeRender(ovrHmd hmd, ovrEyeType eye, ovrPosef renderPose, ovrTexture* eyeTexture);
+
+EXPORT_TYPE ovrMatrix4f __stdcall Projection(ovrFovPort fov, float znear, float zfar, ovrBool rightHanded);
