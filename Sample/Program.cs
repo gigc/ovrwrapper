@@ -257,6 +257,43 @@ namespace Sample
             public IntPtr Device;
         };
 
+        // Frame data reported by ovrHmd_BeginFrameTiming().
+        [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+        public struct ovrFrameTiming
+        {
+            // The amount of time that has passed since the previous frame returned
+            // BeginFrameSeconds value, usable for movement scaling.
+            // This will be clamped to no more than 0.1 seconds to prevent
+            // excessive movement after pauses for loading or initialization.
+            public float DeltaSeconds;
+            float aligment_unused;
+
+            // It is generally expected that the following hold:
+            // ThisFrameSeconds < TimewarpPointSeconds < NextFrameSeconds < 
+            // EyeScanoutSeconds[EyeOrder[0]] <= ScanoutMidpointSeconds <= EyeScanoutSeconds[EyeOrder[1]]
+
+            // Absolute time value of when rendering of this frame began or is expected to
+            // begin; generally equal to NextFrameSeconds of the previous frame. Can be used
+            // for animation timing.
+            public double ThisFrameSeconds;
+            // Absolute point when IMU expects to be sampled for this frame.
+            public double TimewarpPointSeconds;
+            // Absolute time when frame Present + GPU Flush will finish, and the next frame starts.
+            public double NextFrameSeconds;
+
+            // Time when when half of the screen will be scanned out. Can be passes as a prediction
+            // value to ovrHmd_GetSensorState() go get general orientation.
+            public double ScanoutMidpointSeconds;
+            // Timing points when each eye will be scanned out to display. Used for rendering each eye. 
+            double _EyeScanoutSeconds;    
+            double _EyeScanoutSeconds2;
+
+            public double[] EyeScanoutSeconds()
+            {
+                return new double[2] { _EyeScanoutSeconds, _EyeScanoutSeconds2 };
+            }
+        };
+
         [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
         public static extern char Initialize();
 
@@ -273,7 +310,7 @@ namespace Sample
         public static extern ovrSizei GetFovTextureSize(IntPtr hmd, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel);
 
         [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
-        public static extern bool ConfigureRendering(IntPtr hmd, ref ovrD3D9ConfigData apiConfig, ovrHmdCapBits hmdCaps, ovrDistortionCaps distortionCaps, ovrEyeDesc[] eyeDescIn, ref ovrEyeRenderDesc[] eyeRenderDescOut);
+        public static extern bool ConfigureRendering(IntPtr hmd, ref ovrD3D9ConfigData apiConfig, ovrHmdCapBits hmdCaps, ovrDistortionCaps distortionCaps, ovrEyeDesc[] eyeDescIn, [In, Out] ovrEyeRenderDesc[] eyeRenderDescOut);
 
         [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
         public static extern IntPtr StartSensor(IntPtr hmd, ovrHmdCapBits supportedCaps, ovrHmdCapBits requiredCaps);
@@ -283,6 +320,12 @@ namespace Sample
 
         [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
         public static extern ovrSensorState GetSensorState(IntPtr hmd, double absTime);
+
+        [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
+        public static extern ovrFrameTiming BeginFrame(IntPtr hmd, UInt32 frameIndex);
+
+        [DllImport("..\\..\\..\\Debug\\Wrapper.dll")]
+        public static extern void EndFrame(IntPtr hmd);
     }
 
     class Program : OVRManager
@@ -325,10 +368,14 @@ namespace Sample
                 Multisample = 1,
                 RTSize = new ovrSizei(desc.Resolution.w, desc.Resolution.h)
             };
-            if (ConfigureRendering(hmd, ref renderConfigData, 0, ovrDistortionCaps.ovrDistortion_Chromatic | ovrDistortionCaps.ovrDistortion_TimeWarp, eyes, ref renderDesc))
+            if (ConfigureRendering(hmd, ref renderConfigData, 0, ovrDistortionCaps.ovrDistortion_Chromatic | ovrDistortionCaps.ovrDistortion_TimeWarp, eyes, renderDesc))
             {
                 StartSensor(hmd, ovrHmdCapBits.ovrHmdCap_Orientation | ovrHmdCapBits.ovrHmdCap_YawCorrection | ovrHmdCapBits.ovrHmdCap_LatencyTest, 0);
+                //while true
+                BeginFrame(hmd, 0);
                 ovrSensorState sensor_state = GetSensorState(hmd, 0.0);
+                EndFrame(hmd);
+                //end while
                 StopSensor(hmd);
             }
             Shutdown();

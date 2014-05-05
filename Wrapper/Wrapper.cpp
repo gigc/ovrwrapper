@@ -43,7 +43,17 @@ EXPORT_TYPE ovrSizei __stdcall GetFovTextureSize(ovrHmd hmd, ovrEyeType eye, ovr
 	return ovrHmd_GetFovTextureSize(hmd, eye, fov, pixelsPerDisplayPixel);
 }
 
-EXPORT_TYPE ovrBool __stdcall ConfigureRendering(ovrHmd hmd, const ovrRenderAPIConfig* apiConfig, unsigned int hmdCaps, unsigned int distortionCaps, const ovrEyeDesc eyeDescIn[2], ovrEyeRenderDesc* eyeRenderDescOut[2])
+EXPORT_TYPE ovrBool __stdcall ConfigureRendering(ovrHmd hmd, const ovrRenderAPIConfig* apiConfig, unsigned int hmdCaps, unsigned int distortionCaps, const ovrEyeDesc eyeDescIn[2], ovrEyeRenderDesc eyeRenderDescOut[2])
 {
-	return ovrHmd_ConfigureRendering(hmd, apiConfig, hmdCaps, distortionCaps, eyeDescIn, *eyeRenderDescOut);
+	return ovrHmd_ConfigureRendering(hmd, apiConfig, hmdCaps, distortionCaps, eyeDescIn, eyeRenderDescOut);
+}
+
+EXPORT_TYPE ovrFrameTiming __stdcall BeginFrame(ovrHmd hmd, unsigned int frameIndex)
+{
+	return ovrHmd_BeginFrame(hmd, frameIndex);
+}
+
+EXPORT_TYPE void __stdcall EndFrame(ovrHmd hmd)
+{
+	return ovrHmd_EndFrame(hmd);
 }
